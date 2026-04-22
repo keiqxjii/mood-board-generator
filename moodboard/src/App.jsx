@@ -1,92 +1,66 @@
-import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { MOODS, generateItems } from './moods'
-import Header from './components/Header'
-import FloatingOrbs from './components/FloatingOrbs'
-import MoodPill from './components/MoodPill'
-import MoodPrompt from './components/MoodPrompt'
-import MasonryGrid from './components/MasonryGrid'
+import { MOODS, generateItems } from "./moods";
+import Header from "./components/Header";
+import FloatingOrbs from "./components/FloatingOrbs";
+import MoodPill from "./components/MoodPill";
+import MoodPrompt from "./components/MoodPrompt";
+import MasonryGrid from "./components/MasonryGrid";
 
 // ─── Replace with your Anthropic API key ─────────────────────────────────────
 // Create a .env file: VITE_ANTHROPIC_API_KEY=sk-ant-...
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || ''
+const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
 
 export default function App() {
-  const [selectedMood, setSelectedMood] = useState(MOODS[0])
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [aiStatus, setAiStatus] = useState('')
+  const [selectedMood, setSelectedMood] = useState(MOODS[0]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [aiStatus, setAiStatus] = useState("");
 
   const loadMood = useCallback((mood) => {
-    setLoading(true)
-    setItems([])
+    setLoading(true);
+    setItems([]);
     // Small delay so the exit animation can play
     setTimeout(() => {
-      setItems(generateItems(mood.id))
-      setLoading(false)
-    }, 380)
-  }, [])
+      setItems(generateItems(mood.id));
+      setLoading(false);
+    }, 380);
+  }, []);
 
   const handleMoodSelect = (mood) => {
-    setSelectedMood(mood)
-    loadMood(mood)
-    setAiStatus('')
-  }
+    setSelectedMood(mood);
+    loadMood(mood);
+    setAiStatus("");
+  };
 
   // Use Claude to match free-text description to a mood
-  const handleMoodText = async (text) => {
-    setAiStatus('reading vibes…')
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 20,
-          messages: [
-            {
-              role: 'user',
-              content: `Given this mood description: "${text}"
-Pick EXACTLY ONE mood from this list that best matches it: dreamy, golden, coastal, forest, chaos, minimal, romantic, retro.
-Reply with ONLY the single word mood id, nothing else.`,
-            },
-          ],
-        }),
-      })
+  const handleMoodText = (text) => {
+    const lower = text.toLowerCase();
+    const matched =
+      MOODS.find((m) => lower.includes(m.id)) ||
+      MOODS.find((m) => lower.includes(m.label.toLowerCase())) ||
+      MOODS[Math.floor(Math.random() * MOODS.length)];
 
-      if (!res.ok) throw new Error(`API error ${res.status}`)
-
-      const data = await res.json()
-      const moodId = data.content?.[0]?.text?.trim().toLowerCase().replace(/[^a-z]/g, '')
-      const matched = MOODS.find((m) => m.id === moodId) || MOODS[0]
-      setAiStatus(`✦ Matched to "${matched.label}" ${matched.emoji}`)
-      setSelectedMood(matched)
-      loadMood(matched)
-    } catch (err) {
-      console.error(err)
-      setAiStatus('Couldn\'t read vibes — try picking a mood button!')
-    }
-  }
+    setAiStatus(`✦ Matched to "${matched.label}" ${matched.emoji}`);
+    setSelectedMood(matched);
+    loadMood(matched);
+  };
 
   useEffect(() => {
-    loadMood(MOODS[0])
-  }, [])
+    loadMood(MOODS[0]);
+  }, [loadMood]);
 
   return (
     <>
       {/* Animated background */}
       <motion.div
-        key={selectedMood.id + '-bg'}
+        key={selectedMood.id + "-bg"}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
         style={{
-          position: 'fixed',
+          position: "fixed",
           inset: 0,
           zIndex: -1,
           background: selectedMood.bg,
@@ -96,12 +70,18 @@ Reply with ONLY the single word mood id, nothing else.`,
       <FloatingOrbs mood={selectedMood} />
       <Header mood={selectedMood} />
 
-      <div style={{ paddingTop: 90, minHeight: '100vh', position: 'relative', zIndex: 1 }}>
-
+      <div
+        style={{
+          paddingTop: 90,
+          minHeight: "100vh",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
         {/* ── Hero / Controls ── */}
-        <div style={{ textAlign: 'center', padding: '48px 24px 36px' }}>
+        <div style={{ textAlign: "center", padding: "48px 24px 36px" }}>
           <motion.div
-            key={selectedMood.id + '-title'}
+            key={selectedMood.id + "-title"}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -111,8 +91,8 @@ Reply with ONLY the single word mood id, nothing else.`,
                 fontSize: 11,
                 color: selectedMood.palette[0],
                 fontWeight: 700,
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
                 marginBottom: 12,
               }}
             >
@@ -122,10 +102,10 @@ Reply with ONLY the single word mood id, nothing else.`,
             <h1
               style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: 'clamp(42px, 6vw, 72px)',
+                fontSize: "clamp(42px, 6vw, 72px)",
                 fontWeight: 900,
-                color: '#fff',
-                letterSpacing: '-0.02em',
+                color: "#fff",
+                letterSpacing: "-0.02em",
                 lineHeight: 1.05,
                 marginBottom: 8,
               }}
@@ -136,24 +116,25 @@ Reply with ONLY the single word mood id, nothing else.`,
 
             <p
               style={{
-                color: 'rgba(255,255,255,0.5)',
+                color: "rgba(255,255,255,0.5)",
                 fontSize: 16,
                 maxWidth: 400,
-                margin: '0 auto 28px',
+                margin: "0 auto 28px",
                 lineHeight: 1.6,
               }}
             >
-              A visual world crafted around your feeling. Scroll, explore, get lost.
+              A visual world crafted around your feeling. Scroll, explore, get
+              lost.
             </p>
           </motion.div>
 
           {/* Mood pill selectors */}
           <div
             style={{
-              display: 'flex',
+              display: "flex",
               gap: 10,
-              flexWrap: 'wrap',
-              justifyContent: 'center',
+              flexWrap: "wrap",
+              justifyContent: "center",
               marginBottom: 20,
             }}
           >
@@ -168,8 +149,18 @@ Reply with ONLY the single word mood id, nothing else.`,
           </div>
 
           {/* AI text input */}
-          <div style={{ display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
-            <MoodPrompt onMoodText={handleMoodText} accentColor={selectedMood.palette[0]} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <MoodPrompt
+              onMoodText={handleMoodText}
+              accentColor={selectedMood.palette[0]}
+            />
             <AnimatePresence>
               {aiStatus && (
                 <motion.div
@@ -195,7 +186,7 @@ Reply with ONLY the single word mood id, nothing else.`,
           style={{
             height: 1,
             background: `linear-gradient(90deg, transparent, ${selectedMood.palette[0]}44, transparent)`,
-            margin: '0 40px 32px',
+            margin: "0 40px 32px",
           }}
         />
 
@@ -208,9 +199,9 @@ Reply with ONLY the single word mood id, nothing else.`,
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
                 height: 300,
                 gap: 12,
               }}
@@ -223,7 +214,7 @@ Reply with ONLY the single word mood id, nothing else.`,
                   style={{
                     width: 10,
                     height: 10,
-                    borderRadius: '50%',
+                    borderRadius: "50%",
                     background: selectedMood.palette[i],
                   }}
                 />
@@ -231,7 +222,7 @@ Reply with ONLY the single word mood id, nothing else.`,
             </motion.div>
           ) : (
             <motion.div
-              key={selectedMood.id + '-board'}
+              key={selectedMood.id + "-board"}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -245,16 +236,16 @@ Reply with ONLY the single word mood id, nothing else.`,
         {/* Footer */}
         <div
           style={{
-            textAlign: 'center',
+            textAlign: "center",
             padding: 24,
-            color: 'rgba(255,255,255,0.2)',
+            color: "rgba(255,255,255,0.2)",
             fontSize: 12,
-            letterSpacing: '0.05em',
+            letterSpacing: "0.05em",
           }}
         >
           moodboard · powered by AI & Unsplash · your vibe, visualized
         </div>
       </div>
     </>
-  )
+  );
 }
