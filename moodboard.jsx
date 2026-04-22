@@ -1,35 +1,145 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useSpring,
+} from "framer-motion";
 
 // ─── Mood Config ─────────────────────────────────────────────────────────────
 const MOODS = [
-  { id: "dreamy",    label: "Dreamy",     emoji: "🌙", palette: ["#c9b8f0","#f0d8f5","#8b6fcf","#e8c4e8"], bg: "linear-gradient(135deg,#1a0533 0%,#2d1b5e 50%,#4a2080 100%)" },
-  { id: "golden",   label: "Golden Hour", emoji: "🌅", palette: ["#f5c842","#f5935a","#e8724a","#fde68a"], bg: "linear-gradient(135deg,#3d1c02 0%,#7a3b0e 40%,#c4640a 100%)" },
-  { id: "coastal",  label: "Coastal",     emoji: "🌊", palette: ["#7dd3fc","#38bdf8","#0ea5e9","#e0f2fe"], bg: "linear-gradient(135deg,#012b45 0%,#0c4a6e 50%,#075985 100%)" },
-  { id: "forest",   label: "Forest",      emoji: "🌿", palette: ["#86efac","#4ade80","#16a34a","#dcfce7"], bg: "linear-gradient(135deg,#052e16 0%,#14532d 50%,#166534 100%)" },
-  { id: "chaos",    label: "Chaotic",     emoji: "⚡",  palette: ["#f43f5e","#fb923c","#facc15","#a855f7"], bg: "linear-gradient(135deg,#0c0014 0%,#1e003b 40%,#2d0050 100%)" },
-  { id: "minimal",  label: "Minimal",     emoji: "🤍", palette: ["#e2e8f0","#cbd5e1","#94a3b8","#f8fafc"], bg: "linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#334155 100%)" },
-  { id: "romantic", label: "Romantic",    emoji: "🌸", palette: ["#fda4af","#fb7185","#e11d48","#ffe4e6"], bg: "linear-gradient(135deg,#3b0022 0%,#6b0033 40%,#9f1239 100%)" },
-  { id: "retro",    label: "Retro",       emoji: "📼", palette: ["#fcd34d","#f97316","#84cc16","#06b6d4"], bg: "linear-gradient(135deg,#1c0a00 0%,#3b1200 50%,#5a1f00 100%)" },
+  {
+    id: "dreamy",
+    label: "Dreamy",
+    emoji: "🌙",
+    palette: ["#c9b8f0", "#f0d8f5", "#8b6fcf", "#e8c4e8"],
+    bg: "linear-gradient(135deg,#1a0533 0%,#2d1b5e 50%,#4a2080 100%)",
+  },
+  {
+    id: "golden",
+    label: "Golden Hour",
+    emoji: "🌅",
+    palette: ["#f5c842", "#f5935a", "#e8724a", "#fde68a"],
+    bg: "linear-gradient(135deg,#3d1c02 0%,#7a3b0e 40%,#c4640a 100%)",
+  },
+  {
+    id: "coastal",
+    label: "Coastal",
+    emoji: "🌊",
+    palette: ["#7dd3fc", "#38bdf8", "#0ea5e9", "#e0f2fe"],
+    bg: "linear-gradient(135deg,#012b45 0%,#0c4a6e 50%,#075985 100%)",
+  },
+  {
+    id: "forest",
+    label: "Forest",
+    emoji: "🌿",
+    palette: ["#86efac", "#4ade80", "#16a34a", "#dcfce7"],
+    bg: "linear-gradient(135deg,#052e16 0%,#14532d 50%,#166534 100%)",
+  },
+  {
+    id: "chaos",
+    label: "Chaotic",
+    emoji: "⚡",
+    palette: ["#f43f5e", "#fb923c", "#facc15", "#a855f7"],
+    bg: "linear-gradient(135deg,#0c0014 0%,#1e003b 40%,#2d0050 100%)",
+  },
+  {
+    id: "minimal",
+    label: "Minimal",
+    emoji: "🤍",
+    palette: ["#e2e8f0", "#cbd5e1", "#94a3b8", "#f8fafc"],
+    bg: "linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#334155 100%)",
+  },
+  {
+    id: "romantic",
+    label: "Romantic",
+    emoji: "🌸",
+    palette: ["#fda4af", "#fb7185", "#e11d48", "#ffe4e6"],
+    bg: "linear-gradient(135deg,#3b0022 0%,#6b0033 40%,#9f1239 100%)",
+  },
+  {
+    id: "retro",
+    label: "Retro",
+    emoji: "🦢",
+    palette: ["#fcd34d", "#f97316", "#84cc16", "#06b6d4"],
+    bg: "linear-gradient(135deg,#1c0a00 0%,#3b1200 50%,#5a1f00 100%)",
+  },
 ];
 
 // ─── Placeholder Image Packs per Mood ────────────────────────────────────────
 // Using Unsplash source URLs (no API key required) for real photos
 const MOOD_QUERIES = {
-  dreamy:   ["galaxy nebula","moon night","purple clouds","dreamy bokeh","lavender field","mystical forest"],
-  golden:   ["golden hour sunset","warm light photography","desert dunes","autumn leaves","sunrise beach","golden field"],
-  coastal:  ["ocean waves","beach aerial","blue lagoon","sea foam","coastal cliff","tropical reef"],
-  forest:   ["forest sunlight","moss green","fern macro","redwood trees","misty woods","jungle canopy"],
-  chaos:    ["lightning storm","neon city","graffiti art","explosion color","electric lights","urban chaos"],
-  minimal:  ["white marble","minimal architecture","fog mountain","clean texture","empty room","zen stone"],
-  romantic:  ["cherry blossom","rose petals","soft pink light","romantic candle","flower close-up","soft morning"],
-  retro:    ["vintage film","retro diner","old car","cassette tape","80s neon","film grain"],
+  dreamy: [
+    "galaxy nebula",
+    "moon night",
+    "purple clouds",
+    "dreamy bokeh",
+    "lavender field",
+    "mystical forest",
+  ],
+  golden: [
+    "golden hour sunset",
+    "warm light photography",
+    "desert dunes",
+    "autumn leaves",
+    "sunrise beach",
+    "golden field",
+  ],
+  coastal: [
+    "ocean waves",
+    "beach aerial",
+    "blue lagoon",
+    "sea foam",
+    "coastal cliff",
+    "tropical reef",
+  ],
+  forest: [
+    "forest sunlight",
+    "moss green",
+    "fern macro",
+    "redwood trees",
+    "misty woods",
+    "jungle canopy",
+  ],
+  chaos: [
+    "lightning storm",
+    "neon city",
+    "graffiti art",
+    "explosion color",
+    "electric lights",
+    "urban chaos",
+  ],
+  minimal: [
+    "white marble",
+    "minimal architecture",
+    "fog mountain",
+    "clean texture",
+    "empty room",
+    "zen stone",
+  ],
+  romantic: [
+    "cherry blossom",
+    "rose petals",
+    "soft pink light",
+    "romantic candle",
+    "flower close-up",
+    "soft morning",
+  ],
+  retro: [
+    "vintage film",
+    "retro diner",
+    "old car",
+    "cassette tape",
+    "80s neon",
+    "film grain",
+  ],
 };
 
 // Unsplash source for real images
 const getImageUrl = (query, seed) => {
   const q = encodeURIComponent(query);
-  return `https://source.unsplash.com/featured/600x${Math.floor(Math.random()*300+400)}?${q}&sig=${seed}`;
+  return `https://source.unsplash.com/featured/600x${Math.floor(Math.random() * 300 + 400)}?${q}&sig=${seed}`;
 };
 
 // ─── Generate Board Items ─────────────────────────────────────────────────────
@@ -44,7 +154,10 @@ const generateItems = (moodId) => {
       query: q,
       url: getImageUrl(q, i * 137 + moodId.length * 13),
       height: heights[i % heights.length],
-      label: q.split(" ").map(w => w[0].toUpperCase() + w.slice(1)).join(" "),
+      label: q
+        .split(" ")
+        .map((w) => w[0].toUpperCase() + w.slice(1))
+        .join(" "),
       col: i % 3,
     });
   }
@@ -62,7 +175,11 @@ const PinCard = ({ item, mood, index }) => {
     <motion.div
       initial={{ opacity: 0, y: 40, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.055, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: index * 0.055,
+        duration: 0.55,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
       style={{ marginBottom: "16px", position: "relative", cursor: "pointer" }}
@@ -83,11 +200,13 @@ const PinCard = ({ item, mood, index }) => {
       >
         {/* Skeleton */}
         {!loaded && (
-          <div style={{
-            height: item.height,
-            background: `linear-gradient(135deg, ${accent}22, ${accent}44)`,
-            animation: "shimmer 1.5s infinite",
-          }} />
+          <div
+            style={{
+              height: item.height,
+              background: `linear-gradient(135deg, ${accent}22, ${accent}44)`,
+              animation: "shimmer 1.5s infinite",
+            }}
+          />
         )}
 
         <img
@@ -111,7 +230,8 @@ const PinCard = ({ item, mood, index }) => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               style={{
-                position: "absolute", inset: 0,
+                position: "absolute",
+                inset: 0,
                 background: `linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)`,
                 display: "flex",
                 flexDirection: "column",
@@ -119,14 +239,18 @@ const PinCard = ({ item, mood, index }) => {
                 padding: "16px",
               }}
             >
-              <div style={{
-                fontSize: "13px",
-                fontFamily: "'DM Sans', sans-serif",
-                color: "#fff",
-                fontWeight: 600,
-                letterSpacing: "0.02em",
-                marginBottom: 6,
-              }}>{item.label}</div>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontFamily: "'DM Sans', sans-serif",
+                  color: "#fff",
+                  fontWeight: 600,
+                  letterSpacing: "0.02em",
+                  marginBottom: 6,
+                }}
+              >
+                {item.label}
+              </div>
               <div style={{ display: "flex", gap: 6 }}>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
@@ -141,7 +265,9 @@ const PinCard = ({ item, mood, index }) => {
                     cursor: "pointer",
                     fontFamily: "'DM Sans', sans-serif",
                   }}
-                >Save</motion.button>
+                >
+                  Save
+                </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   style={{
@@ -156,20 +282,28 @@ const PinCard = ({ item, mood, index }) => {
                     cursor: "pointer",
                     fontFamily: "'DM Sans', sans-serif",
                   }}
-                >Share</motion.button>
+                >
+                  Share
+                </motion.button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Accent dot */}
-        <div style={{
-          position: "absolute", top: 10, right: 10,
-          width: 10, height: 10, borderRadius: "50%",
-          background: accent,
-          boxShadow: `0 0 12px ${accent}`,
-          opacity: loaded ? 1 : 0,
-        }} />
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            background: accent,
+            boxShadow: `0 0 12px ${accent}`,
+            opacity: loaded ? 1 : 0,
+          }}
+        />
       </motion.div>
     </motion.div>
   );
@@ -181,18 +315,25 @@ const MasonryGrid = ({ items, mood }) => {
   items.forEach((item, i) => cols[i % 3].push({ ...item, origIndex: i }));
 
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(3, 1fr)",
-      gap: "16px",
-      padding: "0 24px 60px",
-      maxWidth: 1100,
-      margin: "0 auto",
-    }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "16px",
+        padding: "0 24px 60px",
+        maxWidth: 1100,
+        margin: "0 auto",
+      }}
+    >
       {cols.map((col, ci) => (
         <div key={ci} style={{ display: "flex", flexDirection: "column" }}>
-          {col.map(item => (
-            <PinCard key={item.id} item={item} mood={mood} index={item.origIndex} />
+          {col.map((item) => (
+            <PinCard
+              key={item.id}
+              item={item}
+              mood={mood}
+              index={item.origIndex}
+            />
           ))}
         </div>
       ))}
@@ -237,7 +378,15 @@ const MoodPill = ({ mood, selected, onSelect }) => (
 
 // ─── Floating Orbs BG ─────────────────────────────────────────────────────────
 const FloatingOrbs = ({ mood }) => (
-  <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      pointerEvents: "none",
+      zIndex: 0,
+      overflow: "hidden",
+    }}
+  >
     {mood.palette.map((color, i) => (
       <motion.div
         key={i}
@@ -245,7 +394,11 @@ const FloatingOrbs = ({ mood }) => (
           x: [0, 40 * (i % 2 === 0 ? 1 : -1), 0],
           y: [0, 30 * (i % 3 === 0 ? 1 : -1), 0],
         }}
-        transition={{ duration: 8 + i * 2, repeat: Infinity, ease: "easeInOut" }}
+        transition={{
+          duration: 8 + i * 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
         style={{
           position: "absolute",
           width: 300 + i * 80,
@@ -265,12 +418,20 @@ const FloatingOrbs = ({ mood }) => (
 const Header = ({ mood }) => {
   const { scrollY } = useScroll();
   const blur = useTransform(scrollY, [0, 100], [0, 16]);
-  const bg = useTransform(scrollY, [0, 80], ["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]);
+  const bg = useTransform(
+    scrollY,
+    [0, 80],
+    ["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"],
+  );
 
   return (
     <motion.header
       style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
         backdropFilter: `blur(${blur}px)`,
         background: bg,
         padding: "16px 28px",
@@ -286,30 +447,46 @@ const Header = ({ mood }) => {
         animate={{ opacity: 1, x: 0 }}
         style={{ display: "flex", alignItems: "center", gap: 10 }}
       >
-        <div style={{
-          width: 34, height: 34, borderRadius: "10px",
-          background: `linear-gradient(135deg, ${mood.palette[0]}, ${mood.palette[2]})`,
-          boxShadow: `0 0 20px ${mood.palette[0]}88`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 17,
-        }}>{mood.emoji}</div>
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: "10px",
+            background: `linear-gradient(135deg, ${mood.palette[0]}, ${mood.palette[2]})`,
+            boxShadow: `0 0 20px ${mood.palette[0]}88`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 17,
+          }}
+        >
+          {mood.emoji}
+        </div>
         <div>
-          <div style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "20px",
-            fontWeight: 700,
-            color: "#fff",
-            letterSpacing: "-0.01em",
-            lineHeight: 1,
-          }}>moodboard</div>
-          <div style={{
-            fontSize: "11px",
-            color: mood.palette[0],
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}>{mood.label} vibes</div>
+          <div
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "#fff",
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+            }}
+          >
+            moodboard
+          </div>
+          <div
+            style={{
+              fontSize: "11px",
+              color: mood.palette[0],
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            {mood.label} vibes
+          </div>
         </div>
       </motion.div>
       <motion.div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -318,12 +495,19 @@ const Header = ({ mood }) => {
           whileTap={{ scale: 0.95 }}
           style={{
             background: `linear-gradient(135deg, ${mood.palette[0]}, ${mood.palette[2]})`,
-            color: "#000", border: "none", borderRadius: "20px",
-            padding: "8px 20px", fontSize: "13px", fontWeight: 700,
-            cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+            color: "#000",
+            border: "none",
+            borderRadius: "20px",
+            padding: "8px 20px",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif",
             boxShadow: `0 4px 16px ${mood.palette[0]}55`,
           }}
-        >Export Board</motion.button>
+        >
+          Export Board
+        </motion.button>
       </motion.div>
     </motion.header>
   );
@@ -343,11 +527,19 @@ const MoodPrompt = ({ onMoodText }) => {
   };
 
   return (
-    <div style={{ display: "flex", gap: 10, marginTop: 12, width: "100%", maxWidth: 520 }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        marginTop: 12,
+        width: "100%",
+        maxWidth: 520,
+      }}
+    >
       <input
         value={val}
-        onChange={e => setVal(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && submit()}
+        onChange={(e) => setVal(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && submit()}
         placeholder="Describe your vibe… e.g. 'cozy rainy sunday'"
         style={{
           flex: 1,
@@ -417,17 +609,22 @@ export default function App() {
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 100,
-          messages: [{
-            role: "user",
-            content: `Given this mood description: "${text}"
+          messages: [
+            {
+              role: "user",
+              content: `Given this mood description: "${text}"
 Pick EXACTLY ONE mood from this list that best matches it: dreamy, golden, coastal, forest, chaos, minimal, romantic, retro.
-Reply with ONLY the single word mood id, nothing else.`
-          }]
-        })
+Reply with ONLY the single word mood id, nothing else.`,
+            },
+          ],
+        }),
       });
       const data = await res.json();
-      const moodId = data.content?.[0]?.text?.trim().toLowerCase().replace(/[^a-z]/g, "");
-      const matched = MOODS.find(m => m.id === moodId) || MOODS[0];
+      const moodId = data.content?.[0]?.text
+        ?.trim()
+        .toLowerCase()
+        .replace(/[^a-z]/g, "");
+      const matched = MOODS.find((m) => m.id === moodId) || MOODS[0];
       setAiStatus(`✦ Matched to "${matched.label}" ${matched.emoji}`);
       setSelectedMood(matched);
       loadMood(matched);
@@ -464,65 +661,90 @@ Reply with ONLY the single word mood id, nothing else.`
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
         style={{
-          position: "fixed", inset: 0, zIndex: -1,
+          position: "fixed",
+          inset: 0,
+          zIndex: -1,
           background: selectedMood.bg,
         }}
       />
       <FloatingOrbs mood={selectedMood} />
       <Header mood={selectedMood} />
 
-      <div ref={boardRef} style={{ paddingTop: 90, minHeight: "100vh", position: "relative", zIndex: 1 }}>
-
+      <div
+        ref={boardRef}
+        style={{
+          paddingTop: 90,
+          minHeight: "100vh",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
         {/* Hero section */}
-        <div style={{
-          textAlign: "center",
-          padding: "48px 24px 36px",
-        }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "48px 24px 36px",
+          }}
+        >
           <motion.div
             key={selectedMood.id + "-title"}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div style={{
-              fontSize: "11px",
-              color: selectedMood.palette[0],
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 700,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              marginBottom: 12,
-            }}>✦ Curated for your mood ✦</div>
-            <h1 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(42px, 6vw, 72px)",
-              fontWeight: 900,
-              color: "#fff",
-              letterSpacing: "-0.02em",
-              lineHeight: 1.05,
-              marginBottom: 8,
-            }}>
+            <div
+              style={{
+                fontSize: "11px",
+                color: selectedMood.palette[0],
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                marginBottom: 12,
+              }}
+            >
+              ✦ Curated for your mood ✦
+            </div>
+            <h1
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "clamp(42px, 6vw, 72px)",
+                fontWeight: 900,
+                color: "#fff",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.05,
+                marginBottom: 8,
+              }}
+            >
               {selectedMood.label}
               <span style={{ color: selectedMood.palette[0] }}> Board</span>
             </h1>
-            <p style={{
-              color: "rgba(255,255,255,0.5)",
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "16px",
-              maxWidth: 400,
-              margin: "0 auto 28px",
-              lineHeight: 1.6,
-            }}>
-              A visual world crafted around your feeling. Scroll, explore, get lost.
+            <p
+              style={{
+                color: "rgba(255,255,255,0.5)",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "16px",
+                maxWidth: 400,
+                margin: "0 auto 28px",
+                lineHeight: 1.6,
+              }}
+            >
+              A visual world crafted around your feeling. Scroll, explore, get
+              lost.
             </p>
           </motion.div>
 
           {/* Mood Pills */}
-          <div style={{
-            display: "flex", gap: 10, flexWrap: "wrap",
-            justifyContent: "center", marginBottom: 20,
-          }}>
-            {MOODS.map(mood => (
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+              justifyContent: "center",
+              marginBottom: 20,
+            }}
+          >
+            {MOODS.map((mood) => (
               <MoodPill
                 key={mood.id}
                 mood={mood}
@@ -533,7 +755,14 @@ Reply with ONLY the single word mood id, nothing else.`
           </div>
 
           {/* AI Text Input */}
-          <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             <MoodPrompt onMoodText={handleMoodText} />
             <AnimatePresence>
               {aiStatus && (
@@ -548,18 +777,22 @@ Reply with ONLY the single word mood id, nothing else.`
                     fontFamily: "'DM Sans', sans-serif",
                     fontWeight: 600,
                   }}
-                >{aiStatus}</motion.div>
+                >
+                  {aiStatus}
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{
-          height: 1,
-          background: `linear-gradient(90deg, transparent, ${selectedMood.palette[0]}44, transparent)`,
-          margin: "0 40px 32px",
-        }} />
+        <div
+          style={{
+            height: 1,
+            background: `linear-gradient(90deg, transparent, ${selectedMood.palette[0]}44, transparent)`,
+            margin: "0 40px 32px",
+          }}
+        />
 
         {/* Board */}
         <AnimatePresence mode="wait">
@@ -570,17 +803,22 @@ Reply with ONLY the single word mood id, nothing else.`
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               style={{
-                display: "flex", justifyContent: "center",
-                alignItems: "center", height: 300, gap: 12,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: 300,
+                gap: 12,
               }}
             >
-              {[0,1,2].map(i => (
+              {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
                   animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
                   transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                   style={{
-                    width: 10, height: 10, borderRadius: "50%",
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
                     background: selectedMood.palette[i],
                   }}
                 />
@@ -600,14 +838,16 @@ Reply with ONLY the single word mood id, nothing else.`
         </AnimatePresence>
 
         {/* Footer */}
-        <div style={{
-          textAlign: "center",
-          padding: "24px",
-          color: "rgba(255,255,255,0.25)",
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: "12px",
-          letterSpacing: "0.05em",
-        }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "24px",
+            color: "rgba(255,255,255,0.25)",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "12px",
+            letterSpacing: "0.05em",
+          }}
+        >
           moodboard · powered by AI & Unsplash · your vibe, visualized
         </div>
       </div>
